@@ -65,6 +65,8 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.4.0'
     implementation 'androidx.activity:activity-compose:1.4.0'
     implementation "androidx.constraintlayout:constraintlayout-compose:1.0.0-rc02"
+    //google play service
+    implementation 'com.google.android.gms:play-services-location:18.0.0'
     testImplementation 'junit:junit:4.+'
     //robolectric
     testImplementation 'org.robolectric:robolectric:4.6'

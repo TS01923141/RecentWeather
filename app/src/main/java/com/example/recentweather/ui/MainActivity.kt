@@ -1,24 +1,26 @@
 package com.example.recentweather.ui
 
-import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Bundle
-import android.webkit.PermissionRequest
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
+import com.example.recentweather.model.network.TwoDayWeatherEntity
+import com.example.recentweather.model.utils.CheckGpsResult
+import com.example.recentweather.model.utils.GetLocationResult
+import com.example.recentweather.model.utils.GpsUtil
 import com.example.recentweather.ui.permission.PermissionRequestActivity
 import com.example.recentweather.ui.theme.RecentWeatherTheme
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationSettingsResponse
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /*
     抓目前位置，轉成地區
@@ -32,7 +34,7 @@ import kotlinx.coroutines.launch
 
     使用API
     目前天氣
-    未來36小時天氣
+    未來兩天天氣
 
     retrofit
     moshi
@@ -51,19 +53,19 @@ import kotlinx.coroutines.launch
     MainActivity
  */
 
+private const val TAG = "MainActivity"
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
+    @Inject lateinit var gpsUtil : GpsUtil
+    private val checkGpsResult by lazy { createCheckGpsResult() }
+    private val locationCallback by lazy { createLocationCallback() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             RecentWeatherTheme {
-//                // A surface container using the 'background' color from the theme
-//                Surface(color = MaterialTheme.colors.background) {
-//                    Greeting("Android")
-//                }
                 MainScreen(viewModel = viewModel)
             }
         }
@@ -72,32 +74,77 @@ class MainActivity : ComponentActivity() {
         if (viewModel.checkPermissionResult.value == PackageManager.PERMISSION_DENIED) {
             startActivity(Intent(this, PermissionRequestActivity::class.java))
         }
+        //get last location
+        gpsUtil.getLastLocation(object : GetLocationResult{
+            override fun onSuccess(location: Location) {
+//                Log.d(TAG, "onLocationResult: location.lat: ${location.latitude}, lng: ${location.longitude}")
+//                viewModel.setCurrentLocation(location)
+                viewModel.updateAreaNameByLocation(location)
+                viewModel.refreshCurrentWeatherEntity()
+            }
+        })
     }
 
     override fun onStart() {
         super.onStart()
-        viewModel.setCheckPermissionResult(
-            ContextCompat.checkSelfPermission(this, PermissionRequestActivity.COARSE_LOCATION))
-//        if (checkPermissionResult == PackageManager.PERMISSION_GRANTED){
-//            //show normal view
-//        } else {
-//            //show no permission view
-//        }
+        //refresh weather entity
         lifecycleScope.launch {
             viewModel.refreshTwoDayWeatherEntityList()
+            if (viewModel.currentWeatherEntity.value == TwoDayWeatherEntity.empty)
+                viewModel.refreshCurrentWeatherEntity()
         }
     }
-}
 
-@Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!")
-}
+    override fun onResume() {
+        super.onResume()
+        //update gps
+        viewModel.setCheckPermissionResult(
+            ContextCompat.checkSelfPermission(this, PermissionRequestActivity.COARSE_LOCATION))
+        if (viewModel.checkPermissionResult.value == PackageManager.PERMISSION_GRANTED){
+            //show normal view
+            gpsUtil.checkGpsIsOpen(this, checkGpsResult)
+        } else {
+            //show no permission view
+        }
+    }
 
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    RecentWeatherTheme {
-        Greeting("Android")
+    override fun onPause() {
+        //stop update gps
+        gpsUtil.stopLocationUpdates(locationCallback)
+        super.onPause()
+    }
+
+    private fun createCheckGpsResult(): CheckGpsResult {
+        return object: CheckGpsResult{
+            override fun onSuccess(locationSettingResponse: LocationSettingsResponse) {
+//                Log.d(TAG, "createCheckGpsResult onSuccess: ")
+                gpsUtil.startLocationUpdates(locationCallback)
+            }
+
+            override fun onFail(exception: Exception) {
+//                Log.d(TAG, "createCheckGpsResult onFail: ")
+                exception.printStackTrace()
+            }
+
+        }
+    }
+
+    private fun createLocationCallback(): LocationCallback {
+        return object : LocationCallback() {
+            override fun onLocationResult(locationResult: LocationResult?) {
+                locationResult ?: return
+                var accurateLocation: Location = locationResult.locations.first()
+                //get must accurate location
+                for (location in locationResult.locations){
+                    if (location.hasAccuracy() && location.accuracy < accurateLocation.accuracy) {
+                        accurateLocation = location
+                    }
+                }
+//                Log.d(TAG, "onLocationResult: accurateLocation.lat: ${accurateLocation.latitude}, lng: ${accurateLocation.longitude}")
+//                viewModel.setCurrentLocation(accurateLocation)
+                viewModel.updateAreaNameByLocation(accurateLocation)
+                viewModel.refreshCurrentWeatherEntity()
+            }
+        }
     }
 }

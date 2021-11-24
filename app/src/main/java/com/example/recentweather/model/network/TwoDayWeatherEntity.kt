@@ -11,7 +11,16 @@ data class TwoDayWeatherEntity(
     val lat: Float,
     val lon: Float,
     val weatherDataList: List<WeatherData>
-)
+) {
+    companion object {
+        val empty = TwoDayWeatherEntity(
+            "",
+            -1f,
+            -1f,
+            listOf()
+        )
+    }
+}
 
 data class WeatherData(
     val time: String,

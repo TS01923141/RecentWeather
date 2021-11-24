@@ -1,9 +1,12 @@
 package com.example.recentweather.model.di
 
+import android.content.Context
 import com.example.recentweather.model.network.WeatherService
+import com.example.recentweather.model.utils.GpsUtil
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import okhttp3.ConnectionPool
 import okhttp3.OkHttpClient
@@ -36,4 +39,8 @@ class ApplicationModule {
     @Provides
     @Singleton
     fun provideWeatherApi(): WeatherService = provideRetrofit().create(WeatherService::class.java)
+
+    @Provides
+    @Singleton
+    fun provideGpsUtil(@ApplicationContext appContext: Context) : GpsUtil = GpsUtil(appContext)
 }

@@ -27,7 +27,7 @@ import com.example.recentweather.ui.theme.RecentWeatherTheme
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
     if (viewModel.checkPermissionResult.value == PackageManager.PERMISSION_GRANTED){
-//        WeatherScreen(viewModel.twoDayWeatherEntityList)
+        if (viewModel.currentWeatherEntity.value != TwoDayWeatherEntity.empty) WeatherScreen(viewModel.currentWeatherEntity.value)
     } else {
         NoPermissionScreen()
     }

@@ -23,9 +23,8 @@ private const val TAG = "MainViewModel"
 @HiltViewModel
 class MainViewModel @Inject constructor(application: Application, private val repository: WeatherRepository): AndroidViewModel(application) {
     private var area = ""
+    private var twoDayWeatherEntityList = mutableStateListOf<TwoDayWeatherEntity>()
 
-    var twoDayWeatherEntityList = mutableStateListOf<TwoDayWeatherEntity>()
-        private set
     var currentWeatherEntity = mutableStateOf(TwoDayWeatherEntity.empty)
         private set
 
@@ -41,11 +40,12 @@ class MainViewModel @Inject constructor(application: Application, private val re
         if (list.isNotEmpty()) {
             twoDayWeatherEntityList.clear()
             twoDayWeatherEntityList.addAll(list)
+            refreshCurrentWeatherEntity()
         }
     }
 
     fun refreshCurrentWeatherEntity() {
-        if (area == "") return
+        if (area == "" || twoDayWeatherEntityList.isEmpty()) return
         val entity = filterWeatherEntityByArea(area)
         if (entity != TwoDayWeatherEntity.empty) currentWeatherEntity.value = entity
     }
@@ -57,6 +57,7 @@ class MainViewModel @Inject constructor(application: Application, private val re
 //        Log.d(TAG, "setAreaNameByLocation: address[0]: ${address[0]}")
 //        return address[0].adminArea ?: address[0].subAdminArea ?: ""
         area = (address[0].adminArea ?: address[0].subAdminArea ?: "").replace('台', '臺')
+        refreshCurrentWeatherEntity()
     }
 
     fun filterWeatherEntityByArea(area: String): TwoDayWeatherEntity {

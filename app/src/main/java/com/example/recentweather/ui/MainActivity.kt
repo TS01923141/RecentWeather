@@ -53,6 +53,8 @@ import javax.inject.Inject
     MainActivity
  */
 
+//TODO("當area或者twoDayWeatherEntityList改變時，自動檢查，如果兩者都不為空，更新目前的entity")
+
 private const val TAG = "MainActivity"
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -80,7 +82,6 @@ class MainActivity : ComponentActivity() {
 //                Log.d(TAG, "onLocationResult: location.lat: ${location.latitude}, lng: ${location.longitude}")
 //                viewModel.setCurrentLocation(location)
                 viewModel.updateAreaNameByLocation(location)
-                viewModel.refreshCurrentWeatherEntity()
             }
         })
     }
@@ -90,8 +91,6 @@ class MainActivity : ComponentActivity() {
         //refresh weather entity
         lifecycleScope.launch {
             viewModel.refreshTwoDayWeatherEntityList()
-            if (viewModel.currentWeatherEntity.value == TwoDayWeatherEntity.empty)
-                viewModel.refreshCurrentWeatherEntity()
         }
     }
 
@@ -143,7 +142,6 @@ class MainActivity : ComponentActivity() {
 //                Log.d(TAG, "onLocationResult: accurateLocation.lat: ${accurateLocation.latitude}, lng: ${accurateLocation.longitude}")
 //                viewModel.setCurrentLocation(accurateLocation)
                 viewModel.updateAreaNameByLocation(accurateLocation)
-                viewModel.refreshCurrentWeatherEntity()
             }
         }
     }

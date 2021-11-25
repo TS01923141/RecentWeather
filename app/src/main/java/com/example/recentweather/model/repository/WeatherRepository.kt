@@ -8,6 +8,7 @@ import com.example.recentweather.model.network.WeatherService
 import com.example.recentweather.model.network.asEntityList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import javax.inject.Inject
 
@@ -36,6 +37,9 @@ class WeatherRepository @Inject constructor(private val service: WeatherService,
                     mutableListOf()
                 }
             } catch (e: UnknownHostException) {
+                e.printStackTrace()
+                mutableListOf()
+            } catch (e: SocketTimeoutException) {
                 e.printStackTrace()
                 mutableListOf()
             }

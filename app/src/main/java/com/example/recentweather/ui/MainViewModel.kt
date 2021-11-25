@@ -17,14 +17,26 @@ import com.example.recentweather.model.repository.WeatherRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.*
 import javax.inject.Inject
 
 private const val TAG = "MainViewModel"
+private const val LAST_MODIFIED = "last_modified"
 @HiltViewModel
 class MainViewModel @Inject constructor(application: Application, private val repository: WeatherRepository): AndroidViewModel(application) {
+    private val sharedPreferences by lazy {
+        getApplication<Application>().getSharedPreferences("database", Application.MODE_PRIVATE) }
+
+    private val _isRefreshing = MutableStateFlow(false)
+
+    val isRefreshing: StateFlow<Boolean>
+        get() = _isRefreshing.asStateFlow()
+
     var area = MutableLiveData("")
 //    private var twoDayWeatherEntityList = mutableStateListOf<TwoDayWeatherEntity>()
     var twoDayWeatherEntityList = repository.twoDayWeatherEntityList
@@ -39,14 +51,16 @@ class MainViewModel @Inject constructor(application: Application, private val re
         checkPermissionResult.value = int
     }
 
-    suspend fun refreshTwoDayWeatherEntityList() = viewModelScope.launch {
-//        val list = repository.getTwoDayWeatherEntities()
-//        if (list.isNotEmpty()) {
-//            twoDayWeatherEntityList.clear()
-//            twoDayWeatherEntityList.addAll(list)
-//            refreshCurrentWeatherEntity()
-//        }
-        repository.refreshTwoDayWeather()
+    fun refreshTwoDayWeatherEntityList(forceRefresh: Boolean = false) = viewModelScope.launch {
+        val lastModified = sharedPreferences.getLong(LAST_MODIFIED, -1)
+        Log.d(TAG, "refreshTwoDayWeatherEntityList: Calendar.getInstance().timeInMillis - lastModified: ${Calendar.getInstance().timeInMillis - lastModified}")
+        if (forceRefresh || Calendar.getInstance().timeInMillis - lastModified > 30 * 60 * 1000) {
+            _isRefreshing.emit(true)
+            repository.refreshTwoDayWeather()
+            sharedPreferences.edit().putLong(LAST_MODIFIED, Calendar.getInstance().timeInMillis).commit()
+            Log.d(TAG, "refreshTwoDayWeatherEntityList: lastModified: ${lastModified}")
+            _isRefreshing.emit(false)
+        }
     }
 
     fun refreshCurrentWeatherEntity() {

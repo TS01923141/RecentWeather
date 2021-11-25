@@ -21,39 +21,47 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.recentweather.R
 import com.example.recentweather.model.network.TwoDayWeatherEntity
 import com.example.recentweather.model.network.WeatherData
 import com.example.recentweather.ui.theme.RecentWeatherTheme
+import com.google.accompanist.swiperefresh.SwipeRefresh
+import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
     if (viewModel.checkPermissionResult.value == PackageManager.PERMISSION_GRANTED){
-        if (viewModel.currentWeatherEntity.value != TwoDayWeatherEntity.empty) WeatherScreen(viewModel.currentWeatherEntity.value)
+        if (viewModel.currentWeatherEntity.value != TwoDayWeatherEntity.empty) WeatherScreen(viewModel, viewModel.currentWeatherEntity.value)
     } else {
         NoPermissionScreen()
     }
 }
 
 @Composable
-fun WeatherScreen(twoDayWeatherEntity: TwoDayWeatherEntity) {
+fun WeatherScreen(viewModel: MainViewModel, twoDayWeatherEntity: TwoDayWeatherEntity) {
+    val isRefreshing by viewModel.isRefreshing.collectAsState()
     Surface(
         color = MaterialTheme.colors.background,
         modifier = Modifier.fillMaxSize()
     ) {
-        Column {
-            Text(
-                text = twoDayWeatherEntity.locationName,
-                fontSize = 18.sp,
-                style = MaterialTheme.typography.h4,
-                modifier = Modifier
-                    .padding(top = 8.dp)
-                    .padding(start = 8.dp)
-                    .padding(end = 8.dp)
-            )
-            LazyColumn {
-                items(twoDayWeatherEntity.weatherDataList) {
-                    WeatherItem(weatherData = it)
+        SwipeRefresh(
+            state = rememberSwipeRefreshState(isRefreshing),
+            onRefresh = { viewModel.refreshTwoDayWeatherEntityList(forceRefresh = true) }) {
+            Column {
+                Text(
+                    text = twoDayWeatherEntity.locationName,
+                    fontSize = 18.sp,
+                    style = MaterialTheme.typography.h4,
+                    modifier = Modifier
+                        .padding(top = 8.dp)
+                        .padding(start = 8.dp)
+                        .padding(end = 8.dp)
+                )
+                LazyColumn {
+                    items(twoDayWeatherEntity.weatherDataList) {
+                        WeatherItem(weatherData = it)
+                    }
                 }
             }
         }
@@ -62,7 +70,7 @@ fun WeatherScreen(twoDayWeatherEntity: TwoDayWeatherEntity) {
 
 
 @Composable
-fun WeatherItem(weatherData: WeatherData/*, isExpanded: MutableState<Boolean> = remember { mutableStateOf(false)}*/) {
+fun WeatherItem(weatherData: WeatherData) {
     var isExpanded by remember { mutableStateOf(false)}
     Card(
         border = BorderStroke(1.dp, MaterialTheme.colors.onBackground),
@@ -72,7 +80,9 @@ fun WeatherItem(weatherData: WeatherData/*, isExpanded: MutableState<Boolean> = 
             .padding(8.dp)
             .clickable { isExpanded = !isExpanded }
     ) {
-        Column(modifier = Modifier.animateContentSize().padding(8.dp)) {
+        Column(modifier = Modifier
+            .animateContentSize()
+            .padding(8.dp)) {
             ConstraintLayout(modifier = Modifier.fillMaxWidth()) {
                 val (time, temp, feelTemp, rain) = createRefs()
                 Text(text = weatherData.time, modifier = Modifier.constrainAs(time) {
@@ -183,7 +193,7 @@ fun PreviewWeatherScreen() {
         )
     )
     RecentWeatherTheme {
-        WeatherScreen(TwoDayWeatherEntity)
+        WeatherScreen(viewModel(), TwoDayWeatherEntity)
     }
 }
 

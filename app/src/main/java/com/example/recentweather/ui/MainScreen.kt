@@ -2,8 +2,10 @@ package com.example.recentweather.ui
 
 import android.content.pm.PackageManager
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -35,7 +37,6 @@ fun MainScreen(viewModel: MainViewModel) {
 
 @Composable
 fun WeatherScreen(twoDayWeatherEntity: TwoDayWeatherEntity) {
-
     Surface(
         color = MaterialTheme.colors.background,
         modifier = Modifier.fillMaxSize()
@@ -61,16 +62,17 @@ fun WeatherScreen(twoDayWeatherEntity: TwoDayWeatherEntity) {
 
 
 @Composable
-fun WeatherItem(weatherData: WeatherData, isExpanded: MutableState<Boolean> = remember { mutableStateOf(false)}) {
-//    var isExpanded by remember { mutableStateOf(false)}
+fun WeatherItem(weatherData: WeatherData/*, isExpanded: MutableState<Boolean> = remember { mutableStateOf(false)}*/) {
+    var isExpanded by remember { mutableStateOf(false)}
     Card(
         border = BorderStroke(1.dp, MaterialTheme.colors.onBackground),
 //        backgroundColor = MaterialTheme.colors.surface,
         modifier = Modifier
             .fillMaxWidth()
             .padding(8.dp)
+            .clickable { isExpanded = !isExpanded }
     ) {
-        Column(modifier = Modifier.padding(8.dp)) {
+        Column(modifier = Modifier.animateContentSize().padding(8.dp)) {
             ConstraintLayout(modifier = Modifier.fillMaxWidth()) {
                 val (time, temp, feelTemp, rain) = createRefs()
                 Text(text = weatherData.time, modifier = Modifier.constrainAs(time) {
@@ -98,7 +100,7 @@ fun WeatherItem(weatherData: WeatherData, isExpanded: MutableState<Boolean> = re
                     bottom.linkTo(parent.bottom)
                 })
             }
-            if (isExpanded.value) {
+            if (isExpanded) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(weatherData.weatherDescription)
             }
@@ -149,8 +151,8 @@ fun PreviewWeatherItem() {
     RecentWeatherTheme {
         Surface(color = MaterialTheme.colors.background, modifier = Modifier.fillMaxWidth()) {
             Column(modifier = Modifier.fillMaxWidth()) {
-                WeatherItem(weatherData, mutableStateOf(false))
-                WeatherItem(weatherData, mutableStateOf(true))
+                WeatherItem(weatherData)
+                WeatherItem(weatherData)
             }
         }
     }

@@ -1,6 +1,8 @@
 package com.example.recentweather.model.di
 
 import android.content.Context
+import androidx.room.Room
+import com.example.recentweather.model.database.TwoDayWeatherDatabase
 import com.example.recentweather.model.network.WeatherService
 import com.example.recentweather.model.utils.GpsUtil
 import dagger.Module
@@ -42,5 +44,14 @@ class ApplicationModule {
 
     @Provides
     @Singleton
-    fun provideGpsUtil(@ApplicationContext appContext: Context) : GpsUtil = GpsUtil(appContext)
+    fun provideGpsUtil(@ApplicationContext appContext: Context): GpsUtil = GpsUtil(appContext)
+
+    @Provides
+    @Singleton
+    fun provideDatabase(@ApplicationContext context: Context): TwoDayWeatherDatabase =
+        Room.databaseBuilder(
+            context.applicationContext,
+            TwoDayWeatherDatabase::class.java,
+            "twoDayWeathers"
+        ).build()
 }

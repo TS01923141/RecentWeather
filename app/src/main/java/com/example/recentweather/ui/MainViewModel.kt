@@ -9,12 +9,15 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.recentweather.model.network.TwoDayWeatherEntity
 import com.example.recentweather.model.repository.WeatherRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.*
 import javax.inject.Inject
@@ -22,8 +25,9 @@ import javax.inject.Inject
 private const val TAG = "MainViewModel"
 @HiltViewModel
 class MainViewModel @Inject constructor(application: Application, private val repository: WeatherRepository): AndroidViewModel(application) {
-    private var area = ""
-    private var twoDayWeatherEntityList = mutableStateListOf<TwoDayWeatherEntity>()
+    var area = MutableLiveData("")
+//    private var twoDayWeatherEntityList = mutableStateListOf<TwoDayWeatherEntity>()
+    var twoDayWeatherEntityList = repository.twoDayWeatherEntityList
 
     var currentWeatherEntity = mutableStateOf(TwoDayWeatherEntity.empty)
         private set
@@ -35,18 +39,21 @@ class MainViewModel @Inject constructor(application: Application, private val re
         checkPermissionResult.value = int
     }
 
-    suspend fun refreshTwoDayWeatherEntityList() = withContext(Dispatchers.IO) {
-        val list = repository.getTwoDayWeatherEntities()
-        if (list.isNotEmpty()) {
-            twoDayWeatherEntityList.clear()
-            twoDayWeatherEntityList.addAll(list)
-            refreshCurrentWeatherEntity()
-        }
+    suspend fun refreshTwoDayWeatherEntityList() = viewModelScope.launch {
+//        val list = repository.getTwoDayWeatherEntities()
+//        if (list.isNotEmpty()) {
+//            twoDayWeatherEntityList.clear()
+//            twoDayWeatherEntityList.addAll(list)
+//            refreshCurrentWeatherEntity()
+//        }
+        repository.refreshTwoDayWeather()
     }
 
     fun refreshCurrentWeatherEntity() {
-        if (area == "" || twoDayWeatherEntityList.isEmpty()) return
-        val entity = filterWeatherEntityByArea(area)
+//        Log.d(TAG, "refreshCurrentWeatherEntity: area: ${area.value}")
+//        Log.d(TAG, "refreshCurrentWeatherEntity: twoDayWeatherEntityList.value: ${twoDayWeatherEntityList.value}")
+        if (area.value == null || area.value!! == "" || twoDayWeatherEntityList.value == null || twoDayWeatherEntityList.value!!.isEmpty()) return
+        val entity = filterWeatherEntityByArea(area.value!!)
         if (entity != TwoDayWeatherEntity.empty) currentWeatherEntity.value = entity
     }
 
@@ -56,16 +63,16 @@ class MainViewModel @Inject constructor(application: Application, private val re
 //        Log.d(TAG, "setAreaNameByLocation: address.size: ${address.size}")
 //        Log.d(TAG, "setAreaNameByLocation: address[0]: ${address[0]}")
 //        return address[0].adminArea ?: address[0].subAdminArea ?: ""
-        area = (address[0].adminArea ?: address[0].subAdminArea ?: "").replace('台', '臺')
-        refreshCurrentWeatherEntity()
+        area.value = (address[0].adminArea ?: address[0].subAdminArea ?: "").replace('台', '臺')
+//        refreshCurrentWeatherEntity()
     }
 
     fun filterWeatherEntityByArea(area: String): TwoDayWeatherEntity {
 //        Log.d(TAG, "filterWeatherEntityByArea: area: $area")
-//        twoDayWeatherEntityList.forEach {
+//        twoDayWeatherEntityList.value?.forEach {
 //            Log.d(TAG, "filterWeatherEntityByArea: it.locationName: ${it.locationName}")
 //        }
-        return twoDayWeatherEntityList.find {
+        return twoDayWeatherEntityList.value?.find {
             it.locationName == area
         } ?: TwoDayWeatherEntity.empty
     }

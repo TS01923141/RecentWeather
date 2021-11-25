@@ -53,8 +53,6 @@ import javax.inject.Inject
     MainActivity
  */
 
-//TODO("當area或者twoDayWeatherEntityList改變時，自動檢查，如果兩者都不為空，更新目前的entity")
-
 private const val TAG = "MainActivity"
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -70,6 +68,10 @@ class MainActivity : ComponentActivity() {
             RecentWeatherTheme {
                 MainScreen(viewModel = viewModel)
             }
+        }
+        with(viewModel) {
+            area.observe(this@MainActivity, ::handleArea)
+            twoDayWeatherEntityList.observe(this@MainActivity, ::handleTwoDayWeatherEntityList)
         }
         viewModel.setCheckPermissionResult(
             ContextCompat.checkSelfPermission(this, PermissionRequestActivity.COARSE_LOCATION))
@@ -144,5 +146,15 @@ class MainActivity : ComponentActivity() {
                 viewModel.updateAreaNameByLocation(accurateLocation)
             }
         }
+    }
+
+    private fun handleArea(area: String?){
+        if (area == null || area == "") return
+        viewModel.refreshCurrentWeatherEntity()
+    }
+
+    private fun handleTwoDayWeatherEntityList(twoDayWeatherEntityList: List<TwoDayWeatherEntity>?) {
+        if (twoDayWeatherEntityList == null || twoDayWeatherEntityList.isEmpty()) return
+        viewModel.refreshCurrentWeatherEntity()
     }
 }

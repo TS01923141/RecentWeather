@@ -4,7 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.recentweather.model.database.TwoDayWeatherDatabase
 import com.example.recentweather.model.network.WeatherService
-import com.example.recentweather.model.utils.GpsUtil
+import com.example.recentweather.model.utils.GpsUtils
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,7 +13,6 @@ import dagger.hilt.components.SingletonComponent
 import okhttp3.ConnectionPool
 import okhttp3.OkHttpClient
 import okhttp3.Protocol
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.util.concurrent.TimeUnit
@@ -44,7 +43,7 @@ class ApplicationModule {
 
     @Provides
     @Singleton
-    fun provideGpsUtil(@ApplicationContext appContext: Context): GpsUtil = GpsUtil(appContext)
+    fun provideGpsUtil(@ApplicationContext appContext: Context): GpsUtils = GpsUtils(appContext)
 
     @Provides
     @Singleton

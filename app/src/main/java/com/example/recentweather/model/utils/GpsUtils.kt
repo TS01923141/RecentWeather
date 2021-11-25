@@ -22,7 +22,7 @@ interface CheckGpsResult {
 }
 
 private const val REQUEST_CHECK_SETTINGS = 0x1
-class GpsUtil @Inject constructor(context: Context) {
+class GpsUtils @Inject constructor(context: Context) {
     private val context = context
     private val fusedLocationClient: FusedLocationProviderClient
     = LocationServices.getFusedLocationProviderClient(context)

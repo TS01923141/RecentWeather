@@ -4,16 +4,13 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.recentweather.model.network.TwoDayWeatherEntity
-import com.example.recentweather.model.utils.CheckGpsResult
-import com.example.recentweather.model.utils.GetLocationResult
-import com.example.recentweather.model.utils.GpsUtil
+import com.example.recentweather.model.utils.*
 import com.example.recentweather.ui.permission.PermissionRequestActivity
 import com.example.recentweather.ui.theme.RecentWeatherTheme
 import com.google.android.gms.location.LocationCallback
@@ -59,7 +56,8 @@ private const val TAG = "MainActivity"
 class MainActivity : ComponentActivity() {
 
     private val viewModel: MainViewModel by viewModels()
-    @Inject lateinit var gpsUtil : GpsUtil
+    @Inject lateinit var gpsUtils : GpsUtils
+    private val permissionUtils: PermissionUtils by lazy{ PermissionUtils(this, createPermissionResult()) }
     private val checkGpsResult by lazy { createCheckGpsResult() }
     private val locationCallback by lazy { createLocationCallback() }
 
@@ -75,12 +73,13 @@ class MainActivity : ComponentActivity() {
             twoDayWeatherEntityList.observe(this@MainActivity, ::handleTwoDayWeatherEntityList)
         }
         viewModel.setCheckPermissionResult(
-            ContextCompat.checkSelfPermission(this, PermissionRequestActivity.COARSE_LOCATION))
+//            ContextCompat.checkSelfPermission(this, PermissionRequestActivity.COARSE_LOCATION))
+        ContextCompat.checkSelfPermission(this, PermissionUtils.COARSE_LOCATION))
         if (viewModel.checkPermissionResult.value == PackageManager.PERMISSION_DENIED) {
-            startActivity(Intent(this, PermissionRequestActivity::class.java))
+            permissionUtils.checkAndRequestPermission()
         }
         //get last location
-        gpsUtil.getLastLocation(object : GetLocationResult{
+        gpsUtils.getLastLocation(object : GetLocationResult{
             override fun onSuccess(location: Location) {
 //                Log.d(TAG, "onLocationResult: location.lat: ${location.latitude}, lng: ${location.longitude}")
 //                viewModel.setCurrentLocation(location)
@@ -92,7 +91,6 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         //refresh weather entity
-        Log.d(TAG, "onStart: ")
         lifecycleScope.launch {
             viewModel.refreshTwoDayWeatherEntityList()
         }
@@ -102,26 +100,44 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         //update gps
         viewModel.setCheckPermissionResult(
-            ContextCompat.checkSelfPermission(this, PermissionRequestActivity.COARSE_LOCATION))
+            ContextCompat.checkSelfPermission(this, PermissionUtils.COARSE_LOCATION))
         if (viewModel.checkPermissionResult.value == PackageManager.PERMISSION_GRANTED){
             //show normal view
-            gpsUtil.checkGpsIsOpen(this, checkGpsResult)
-        } else {
-            //show no permission view
+            gpsUtils.checkGpsIsOpen(this, checkGpsResult)
         }
     }
 
     override fun onPause() {
         //stop update gps
-        gpsUtil.stopLocationUpdates(locationCallback)
+        gpsUtils.stopLocationUpdates(locationCallback)
         super.onPause()
     }
+
+    //permission
+
+    private fun createPermissionResult() : PermissionResult {
+        return object: PermissionResult{
+            override fun onGranted() {
+                viewModel.setCheckPermissionResult(
+                    ContextCompat.checkSelfPermission(this@MainActivity, PermissionUtils.COARSE_LOCATION))
+                gpsUtils.startLocationUpdates(locationCallback)
+            }
+
+            override fun onDenied() {
+                viewModel.setCheckPermissionResult(
+                    ContextCompat.checkSelfPermission(this@MainActivity, PermissionUtils.COARSE_LOCATION))
+            }
+
+        }
+    }
+
+    //location
 
     private fun createCheckGpsResult(): CheckGpsResult {
         return object: CheckGpsResult{
             override fun onSuccess(locationSettingResponse: LocationSettingsResponse) {
 //                Log.d(TAG, "createCheckGpsResult onSuccess: ")
-                gpsUtil.startLocationUpdates(locationCallback)
+                gpsUtils.startLocationUpdates(locationCallback)
             }
 
             override fun onFail(exception: Exception) {
@@ -149,6 +165,8 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    //live data observe
 
     private fun handleArea(area: String?){
         if (area == null || area == "") return

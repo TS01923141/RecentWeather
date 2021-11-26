@@ -1,6 +1,5 @@
 package com.example.recentweather.ui
 
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
@@ -11,7 +10,6 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.recentweather.model.network.TwoDayWeatherEntity
 import com.example.recentweather.model.utils.*
-import com.example.recentweather.ui.permission.PermissionRequestActivity
 import com.example.recentweather.ui.theme.RecentWeatherTheme
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
@@ -76,7 +74,8 @@ class MainActivity : ComponentActivity() {
 //            ContextCompat.checkSelfPermission(this, PermissionRequestActivity.COARSE_LOCATION))
         ContextCompat.checkSelfPermission(this, PermissionUtils.COARSE_LOCATION))
         if (viewModel.checkPermissionResult.value == PackageManager.PERMISSION_DENIED) {
-            permissionUtils.checkAndRequestPermission()
+            permissionUtils.checkAndRequestPermission(PermissionUtils.COARSE_LOCATION)
+//            permissionUtils.checkAndRequestPermissionList(listOf(PermissionUtils.COARSE_LOCATION))
         }
         //get last location
         gpsUtils.getLastLocation(object : GetLocationResult{

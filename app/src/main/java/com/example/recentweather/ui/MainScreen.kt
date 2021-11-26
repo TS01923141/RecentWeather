@@ -2,6 +2,7 @@ package com.example.recentweather.ui
 
 import android.content.pm.PackageManager
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
+import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -15,6 +16,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.InspectableModifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -28,7 +30,11 @@ import com.example.recentweather.model.network.WeatherData
 import com.example.recentweather.ui.theme.RecentWeatherTheme
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import java.text.SimpleDateFormat
+import java.util.*
+import java.util.logging.SimpleFormatter
 
+private const val TAG = "MainScreen"
 @Composable
 fun MainScreen(viewModel: MainViewModel) {
     if (viewModel.checkPermissionResult.value == PackageManager.PERMISSION_GRANTED){
@@ -39,7 +45,7 @@ fun MainScreen(viewModel: MainViewModel) {
 }
 
 @Composable
-fun WeatherScreen(viewModel: MainViewModel, twoDayWeatherEntity: TwoDayWeatherEntity) {
+fun WeatherScreen(viewModel: MainViewModel = viewModel(), twoDayWeatherEntity: TwoDayWeatherEntity) {
     val isRefreshing by viewModel.isRefreshing.collectAsState()
     Surface(
         color = MaterialTheme.colors.background,
@@ -49,15 +55,27 @@ fun WeatherScreen(viewModel: MainViewModel, twoDayWeatherEntity: TwoDayWeatherEn
             state = rememberSwipeRefreshState(isRefreshing),
             onRefresh = { viewModel.refreshTwoDayWeatherEntityList(forceRefresh = true) }) {
             Column {
-                Text(
-                    text = twoDayWeatherEntity.locationName,
-                    fontSize = 18.sp,
-                    style = MaterialTheme.typography.h4,
+                Row(
                     modifier = Modifier
                         .padding(top = 8.dp)
                         .padding(start = 8.dp)
                         .padding(end = 8.dp)
-                )
+                        .fillMaxWidth()
+                        .height(IntrinsicSize.Max)){
+                    Text(
+                        text = twoDayWeatherEntity.locationName,
+                        fontSize = 18.sp,
+                        style = MaterialTheme.typography.h4
+                    )
+                    Box(
+                        contentAlignment = Alignment.BottomEnd,
+                        modifier = Modifier.fillMaxWidth().fillMaxHeight()){
+                        Text(
+                            text = SimpleDateFormat("最後更新時間 MM/dd HH:mm", Locale.TAIWAN).format(Date(viewModel.getLastModifiedTime())),
+                            fontSize = 12.sp
+                        )
+                    }
+                }
                 LazyColumn {
                     items(twoDayWeatherEntity.weatherDataList) {
                         WeatherItem(weatherData = it)
@@ -67,7 +85,6 @@ fun WeatherScreen(viewModel: MainViewModel, twoDayWeatherEntity: TwoDayWeatherEn
         }
     }
 }
-
 
 @Composable
 fun WeatherItem(weatherData: WeatherData) {

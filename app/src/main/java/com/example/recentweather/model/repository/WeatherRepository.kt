@@ -17,13 +17,16 @@ class WeatherRepository @Inject constructor(private val service: WeatherService,
 //    val twoDayWeatherEntityList : List<TwoDayWeatherEntity> = database.twoDayWeatherDao.getList()
     val twoDayWeatherEntityList : LiveData<List<TwoDayWeatherEntity>> = database.twoDayWeatherDao.getLiveDataList()
 
-    suspend fun refreshTwoDayWeather() = withContext(Dispatchers.IO) {
+    suspend fun refreshTwoDayWeather(): Boolean = withContext(Dispatchers.IO) {
         val twoDayWeatherEntityList = getTwoDayWeatherEntities()
         if (twoDayWeatherEntityList.isNotEmpty()) {
             database.twoDayWeatherDao.insertAll(twoDayWeatherEntityList)
+            true
 //            database.twoDayWeatherDao.getList().forEach {
 //                Log.d(TAG, "refreshTwoDayWeather: twoDayWeatherEntity: ${it.toString()}")
 //            }
+        } else {
+            false
         }
     }
 

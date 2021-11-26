@@ -52,12 +52,11 @@ class MainViewModel @Inject constructor(application: Application, private val re
     }
 
     fun refreshTwoDayWeatherEntityList(forceRefresh: Boolean = false) = viewModelScope.launch {
-        val lastModified = sharedPreferences.getLong(LAST_MODIFIED, -1)
+        val lastModified = getLastModifiedTime()
 //        Log.d(TAG, "refreshTwoDayWeatherEntityList: Calendar.getInstance().timeInMillis - lastModified: ${Calendar.getInstance().timeInMillis - lastModified}")
         if (forceRefresh || Calendar.getInstance().timeInMillis - lastModified > 30 * 60 * 1000) {
             _isRefreshing.emit(true)
-            repository.refreshTwoDayWeather()
-            sharedPreferences.edit().putLong(LAST_MODIFIED, Calendar.getInstance().timeInMillis).commit()
+            if(repository.refreshTwoDayWeather()) sharedPreferences.edit().putLong(LAST_MODIFIED, Calendar.getInstance().timeInMillis).commit()
 //            Log.d(TAG, "refreshTwoDayWeatherEntityList: lastModified: ${lastModified}")
             _isRefreshing.emit(false)
         }
@@ -89,5 +88,9 @@ class MainViewModel @Inject constructor(application: Application, private val re
         return twoDayWeatherEntityList.value?.find {
             it.locationName == area
         } ?: TwoDayWeatherEntity.empty
+    }
+
+    fun getLastModifiedTime(): Long {
+        return sharedPreferences.getLong(LAST_MODIFIED, -1)
     }
 }

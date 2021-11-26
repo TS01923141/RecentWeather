@@ -54,7 +54,7 @@ class MainViewModel @Inject constructor(application: Application, private val re
     fun refreshTwoDayWeatherEntityList(forceRefresh: Boolean = false) = viewModelScope.launch {
         val lastModified = getLastModifiedTime()
 //        Log.d(TAG, "refreshTwoDayWeatherEntityList: Calendar.getInstance().timeInMillis - lastModified: ${Calendar.getInstance().timeInMillis - lastModified}")
-        if (forceRefresh || Calendar.getInstance().timeInMillis - lastModified > 30 * 60 * 1000) {
+        if (forceRefresh || Calendar.getInstance().timeInMillis - lastModified > 30 * 60 * 1000 || twoDayWeatherEntityList.value == null) {
             _isRefreshing.emit(true)
             if(repository.refreshTwoDayWeather()) sharedPreferences.edit().putLong(LAST_MODIFIED, Calendar.getInstance().timeInMillis).commit()
 //            Log.d(TAG, "refreshTwoDayWeatherEntityList: lastModified: ${lastModified}")
@@ -63,11 +63,15 @@ class MainViewModel @Inject constructor(application: Application, private val re
     }
 
     fun refreshCurrentWeatherEntity() {
-//        Log.d(TAG, "refreshCurrentWeatherEntity: area: ${area.value}")
-//        Log.d(TAG, "refreshCurrentWeatherEntity: twoDayWeatherEntityList.value: ${twoDayWeatherEntityList.value}")
+        Log.d(TAG, "refreshCurrentWeatherEntity: area: ${area.value}")
+        Log.d(TAG, "refreshCurrentWeatherEntity: twoDayWeatherEntityList.value: ${twoDayWeatherEntityList.value}")
         if (area.value == null || area.value!! == "" || twoDayWeatherEntityList.value == null || twoDayWeatherEntityList.value!!.isEmpty()) return
         val entity = filterWeatherEntityByArea(area.value!!)
         if (entity != TwoDayWeatherEntity.empty) currentWeatherEntity.value = entity
+        Log.d(TAG, "refreshCurrentWeatherEntity: entity.weatherDataList.size: ${entity.weatherDataList.size}")
+        entity.weatherDataList.forEach {
+            Log.d(TAG, "refreshCurrentWeatherEntity: weatherData: ${it}")
+        }
     }
 
     fun updateAreaNameByLocation(location: Location) {

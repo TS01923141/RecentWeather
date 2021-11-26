@@ -20,11 +20,9 @@ class WeatherRepository @Inject constructor(private val service: WeatherService,
     suspend fun refreshTwoDayWeather(): Boolean = withContext(Dispatchers.IO) {
         val twoDayWeatherEntityList = getTwoDayWeatherEntities()
         if (twoDayWeatherEntityList.isNotEmpty()) {
+            database.twoDayWeatherDao.deleteAll()
             database.twoDayWeatherDao.insertAll(twoDayWeatherEntityList)
             true
-//            database.twoDayWeatherDao.getList().forEach {
-//                Log.d(TAG, "refreshTwoDayWeather: twoDayWeatherEntity: ${it.toString()}")
-//            }
         } else {
             false
         }

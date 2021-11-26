@@ -2,7 +2,6 @@ package com.example.recentweather.ui
 
 import android.content.pm.PackageManager
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
-import android.util.Log
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -16,7 +15,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.InspectableModifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,7 +30,6 @@ import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
 import java.text.SimpleDateFormat
 import java.util.*
-import java.util.logging.SimpleFormatter
 
 private const val TAG = "MainScreen"
 @Composable
@@ -69,7 +66,9 @@ fun WeatherScreen(viewModel: MainViewModel = viewModel(), twoDayWeatherEntity: T
                     )
                     Box(
                         contentAlignment = Alignment.BottomEnd,
-                        modifier = Modifier.fillMaxWidth().fillMaxHeight()){
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .fillMaxHeight()){
                         Text(
                             text = SimpleDateFormat("最後更新時間 MM/dd HH:mm", Locale.TAIWAN).format(Date(viewModel.getLastModifiedTime())),
                             fontSize = 12.sp
@@ -78,6 +77,9 @@ fun WeatherScreen(viewModel: MainViewModel = viewModel(), twoDayWeatherEntity: T
                 }
                 LazyColumn {
                     items(twoDayWeatherEntity.weatherDataList) {
+                        if (it.time == "00:00") {
+                            Text(text = it.date, modifier = Modifier.padding(8.dp))
+                        }
                         WeatherItem(weatherData = it)
                     }
                 }
@@ -168,6 +170,7 @@ fun NoPermissionScreen() {
 @Composable
 fun PreviewWeatherItem() {
     val weatherData = WeatherData(
+        "01/01",
         "18:00",
         18,
         16,
@@ -194,6 +197,7 @@ fun PreviewWeatherScreen() {
         25.035095f,
         121.558742f,
         listOf(WeatherData(
+            "01/01",
             "18:00",
             18,
             16,
@@ -201,6 +205,7 @@ fun PreviewWeatherScreen() {
             49,
             "陰。降雨機率 20%。溫度攝氏19度。稍有寒意。東北風 平均風速2-3級(每秒5公尺)。相對濕度85%。"),
             WeatherData(
+                "01/01",
                 "18:00",
                 18,
                 16,

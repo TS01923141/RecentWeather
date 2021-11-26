@@ -34,6 +34,7 @@ data class TwoDayWeatherEntity(
 @Entity
 @Parcelize
 data class WeatherData(
+    val date: String = "",
     val time: String = "",
     val temp: Int = -1,
     val feelTemp : Int = -1,

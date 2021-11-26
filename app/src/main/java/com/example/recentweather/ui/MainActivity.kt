@@ -49,6 +49,9 @@ import javax.inject.Inject
     MainActivity
  */
 
+//TODO("lazy column 換日顯示日期")
+//TODO("可選地點")
+
 private const val TAG = "MainActivity"
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {

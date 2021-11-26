@@ -1,6 +1,5 @@
 package com.example.recentweather.model.network
 
-import android.util.Log
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 import java.text.SimpleDateFormat
@@ -26,40 +25,45 @@ fun TwoDayWeatherResponse.asEntityList(): List<TwoDayWeatherEntity> {
                     "PoP6h" -> pop6h = it.times
                     "WeatherDescription" -> weatherDescription = it.times
                 }
-                if (temp.isNotEmpty() && feelTemp.isNotEmpty() && wx.isNotEmpty()
-                    && pop6h.isNotEmpty() && weatherDescription.isNotEmpty()
-                ) {
-                    //降雨6小時一次，所以這邊*2
-                    var rainRate: MutableList<Time> = mutableListOf()
-                    pop6h.forEach {
-                        rainRate.add(it)
-                        rainRate.add(it)
+            }
+            if (temp.isNotEmpty() && feelTemp.isNotEmpty() && wx.isNotEmpty()
+                && pop6h.isNotEmpty() && weatherDescription.isNotEmpty()
+            ) {
+                //降雨6小時一次，所以這邊*2
+                var rainRate: MutableList<Time> = mutableListOf()
+                pop6h.forEach {
+                    rainRate.add(it)
+                    rainRate.add(it)
+                }
+                //pop6h有可能只有11個，*2不足24個，在這邊補上
+                if (rainRate.size < 24){
+                    for (i in 1..(24-rainRate.size)){
+                        rainRate.add(pop6h.last())
                     }
-                    //pop6h有可能只有11個，*2不足24個，在這邊補上
-                    if (rainRate.size < 24){
-                        for (i in 1..(24-rainRate.size)){
-                            rainRate.add(pop6h.last())
-                        }
-                    }
-                    val times = mutableListOf<String>()
-                    temp.forEach {
-                        //2021-11-23 12:00:00
-                        val originFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.TAIWAN)
-                        val newFormatter = SimpleDateFormat("HH:mm", Locale.TAIWAN)
-                        times.add(newFormatter.format(originFormatter.parse(it.dataTime)))
-                    }
-                    for (i in 0..23) {
-                        val weatherData = WeatherData(
-                            time = times[i],
-                            temp = temp[i].elementValues[0].value.toInt(),
-                            feelTemp = feelTemp[i].elementValues[0].value.toInt(),
-                            wx = wx[i].elementValues[0].value,
-                            rainRate = rainRate[i].elementValues[0].value.toInt(),
-                            weatherDescription = weatherDescription[i].elementValues[0].value
-                        )
-                        //add weather data
-                        weatherDatas.add(weatherData)
-                    }
+                }
+                val dates = mutableListOf<String>()
+                val times = mutableListOf<String>()
+                temp.forEach {
+                    //2021-11-23 12:00:00
+                    val originFormatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.TAIWAN)
+                    val dateFormatter = SimpleDateFormat("yyyy年MM月dd日", Locale.TAIWAN)
+                    val timeFormatter = SimpleDateFormat("HH:mm", Locale.TAIWAN)
+                    dates.add(dateFormatter.format(originFormatter.parse(it.dataTime)))
+                    times.add(timeFormatter.format(originFormatter.parse(it.dataTime)))
+                }
+                //create weatherData
+                for (i in temp.indices) {
+                    val weatherData = WeatherData(
+                        date = dates[i],
+                        time = times[i],
+                        temp = temp[i].elementValues[0].value.toInt(),
+                        feelTemp = feelTemp[i].elementValues[0].value.toInt(),
+                        wx = wx[i].elementValues[0].value,
+                        rainRate = rainRate[i].elementValues[0].value.toInt(),
+                        weatherDescription = weatherDescription[i].elementValues[0].value
+                    )
+                    //add weather data
+                    weatherDatas.add(weatherData)
                 }
             }
             val entity = TwoDayWeatherEntity(

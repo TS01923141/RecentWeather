@@ -1,4 +1,4 @@
-package com.example.recentweather.ui
+package com.example.recentweather.ui.main
 
 import android.content.pm.PackageManager
 import android.content.res.Configuration.UI_MODE_NIGHT_YES
@@ -33,54 +33,79 @@ import java.util.*
 
 private const val TAG = "MainScreen"
 @Composable
-fun MainScreen(viewModel: MainViewModel) {
+fun MainScreen(viewModel: MainViewModel, onTitleClicked: () -> Unit) {
     if (viewModel.checkPermissionResult.value == PackageManager.PERMISSION_GRANTED){
-        if (viewModel.currentWeatherEntity.value != TwoDayWeatherEntity.empty) WeatherScreen(viewModel, viewModel.currentWeatherEntity.value)
+        if (viewModel.currentWeatherEntity.value != TwoDayWeatherEntity.empty) WeatherScreen(viewModel, viewModel.currentWeatherEntity.value, onTitleClicked)
     } else {
         NoPermissionScreen()
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun WeatherScreen(viewModel: MainViewModel = viewModel(), twoDayWeatherEntity: TwoDayWeatherEntity) {
+fun WeatherTopBar(locationName: String, onTitleClicked: () -> Unit) {
+    Row(verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Max)) {
+        Surface(onClick = onTitleClicked) {
+            Row(verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 8.dp)) {
+                Text(text = locationName,
+                    fontSize = 18.sp,
+                    modifier = Modifier)
+                Image(painter = painterResource(id = R.drawable.ic_baseline_keyboard_arrow_down_24),
+                    alignment = Alignment.BottomCenter,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun WeatherScreen(viewModel: MainViewModel = viewModel(), twoDayWeatherEntity: TwoDayWeatherEntity, onTitleClicked: () -> Unit) {
     val isRefreshing by viewModel.isRefreshing.collectAsState()
-    Surface(
-        color = MaterialTheme.colors.background,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        SwipeRefresh(
-            state = rememberSwipeRefreshState(isRefreshing),
-            onRefresh = { viewModel.refreshTwoDayWeatherEntityList(forceRefresh = true) }) {
-            Column {
-                Row(
-                    modifier = Modifier
-                        .padding(top = 8.dp)
-                        .padding(start = 8.dp)
-                        .padding(end = 8.dp)
-                        .fillMaxWidth()
-                        .height(IntrinsicSize.Max)){
-                    Text(
-                        text = twoDayWeatherEntity.locationName,
-                        fontSize = 18.sp,
-                        style = MaterialTheme.typography.h4
-                    )
-                    Box(
-                        contentAlignment = Alignment.BottomEnd,
+    Scaffold(topBar = { WeatherTopBar(locationName = twoDayWeatherEntity.locationName, onTitleClicked) }) {
+        Surface(
+            color = MaterialTheme.colors.background,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            SwipeRefresh(
+                state = rememberSwipeRefreshState(isRefreshing),
+                onRefresh = { viewModel.refreshTwoDayWeatherEntityList(forceRefresh = true) }) {
+                Column {
+                    Row(
                         modifier = Modifier
+                            .padding(top = 8.dp)
+                            .padding(start = 8.dp)
+                            .padding(end = 8.dp)
                             .fillMaxWidth()
-                            .fillMaxHeight()){
-                        Text(
-                            text = SimpleDateFormat("最後更新時間 MM/dd HH:mm", Locale.TAIWAN).format(Date(viewModel.getLastModifiedTime())),
-                            fontSize = 12.sp
-                        )
-                    }
-                }
-                LazyColumn {
-                    items(twoDayWeatherEntity.weatherDataList) {
-                        if (it.time == "00:00") {
-                            Text(text = it.date, modifier = Modifier.padding(8.dp))
+                            .height(IntrinsicSize.Max)){
+//                    Text(
+//                        text = twoDayWeatherEntity.locationName,
+//                        fontSize = 18.sp,
+//                        style = MaterialTheme.typography.h4
+//                    )
+                        Box(
+                            contentAlignment = Alignment.BottomEnd,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .fillMaxHeight()){
+                            Text(
+                                text = SimpleDateFormat("最後更新時間 MM/dd HH:mm", Locale.TAIWAN).format(Date(viewModel.getLastModifiedTime())),
+                                fontSize = 12.sp
+                            )
                         }
-                        WeatherItem(weatherData = it)
+                    }
+                    LazyColumn {
+                        items(twoDayWeatherEntity.weatherDataList) {
+                            if (it.time == "00:00") {
+                                Text(text = it.date, modifier = Modifier.padding(8.dp))
+                            }
+                            WeatherItem(weatherData = it)
+                        }
                     }
                 }
             }
@@ -162,7 +187,15 @@ fun NoPermissionScreen() {
             )
         }
     }
+}
 
+@Preview(name = "WeatherBar(Light)", showBackground = true)
+@Preview(name = "WeatherBar(Dark)", showBackground = true, uiMode = UI_MODE_NIGHT_YES)
+@Composable
+fun PreviewWeatherTopBar() {
+    RecentWeatherTheme {
+        WeatherTopBar(locationName = "臺北市", {})
+    }
 }
 
 @Preview(name = "WeatherItem(Light)")
@@ -215,7 +248,7 @@ fun PreviewWeatherScreen() {
         )
     )
     RecentWeatherTheme {
-        WeatherScreen(viewModel(), TwoDayWeatherEntity)
+        WeatherScreen(viewModel(), TwoDayWeatherEntity, {})
     }
 }
 

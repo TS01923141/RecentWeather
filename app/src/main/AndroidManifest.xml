@@ -14,12 +14,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.RecentWeather">
         <activity
+            android:name=".ui.areachoose.AreaChooseActivity"
+            android:exported="true"
+            android:theme="@style/Theme.RecentWeather.NoActionBar" />
+        <activity
             android:name=".ui.permission.PermissionRequestActivity"
             android:exported="true"
             android:label="@string/title_activity_main"
             android:theme="@style/Theme.RecentWeather.NoActionBar" />
         <activity
-            android:name=".ui.MainActivity"
+            android:name=".ui.main.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.RecentWeather.NoActionBar">

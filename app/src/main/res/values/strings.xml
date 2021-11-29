@@ -4,4 +4,5 @@
     <string name="permission_explain_location">The app need location permission to locate your location</string>
     <string name="no_thanks">no thanks</string>
     <string name="ok">ok</string>
+    <string name="title_area_choose">區域選擇</string>
 </resources>

@@ -28,6 +28,13 @@ data class TwoDayWeatherEntity(
             -1f,
             listOf()
         )
+
+        val test = TwoDayWeatherEntity(
+            "新竹縣",
+            24.841246f,
+            120.9957f,
+            listOf()
+        )
     }
 }
 

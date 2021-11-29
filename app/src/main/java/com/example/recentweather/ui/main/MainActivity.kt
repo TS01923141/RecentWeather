@@ -1,15 +1,19 @@
-package com.example.recentweather.ui
+package com.example.recentweather.ui.main
 
+import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.recentweather.model.network.TwoDayWeatherEntity
 import com.example.recentweather.model.utils.*
+import com.example.recentweather.ui.areachoose.AreaChooseActivity
 import com.example.recentweather.ui.theme.RecentWeatherTheme
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
@@ -49,8 +53,24 @@ import javax.inject.Inject
     MainActivity
  */
 
-//TODO("lazy column 換日顯示日期")
 //TODO("可選地點")
+
+/*
+    建一個titleBar
+    地區移動到TitleBar
+    地區右邊新增一個往下的箭頭
+    點地區跳到選地區screen
+
+    地區screen
+    從資料庫抓所有地區的標題
+    列表式呈現
+
+    點選item後
+    SingleTop開啟MainActivity
+
+    MainActivity調整
+    如果從intent接到area，就不會用gps方式更新area
+ */
 
 private const val TAG = "MainActivity"
 @AndroidEntryPoint
@@ -62,11 +82,25 @@ class MainActivity : ComponentActivity() {
     private val checkGpsResult by lazy { createCheckGpsResult() }
     private val locationCallback by lazy { createLocationCallback() }
 
+    private val chooseActivityLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val intent = result.data
+            val area = intent?.getStringExtra("location_name")
+            if (area != null && area.isNotBlank() && area.isNotEmpty()) {
+                gpsUtils.stopLocationUpdates(locationCallback)
+                viewModel.setAreaAndStopUpdateLocation(area)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             RecentWeatherTheme {
-                MainScreen(viewModel = viewModel)
+                MainScreen(
+                    viewModel = viewModel,
+                    { startToAreaActivity() }
+                )
             }
         }
         with(viewModel) {
@@ -101,11 +135,14 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         //update gps
-        viewModel.setCheckPermissionResult(
-            ContextCompat.checkSelfPermission(this, PermissionUtils.COARSE_LOCATION))
-        if (viewModel.checkPermissionResult.value == PackageManager.PERMISSION_GRANTED){
-            //show normal view
-            gpsUtils.checkGpsIsOpen(this, checkGpsResult)
+        if (viewModel.autoUpdateArea) {
+            viewModel.setCheckPermissionResult(
+                ContextCompat.checkSelfPermission(this, PermissionUtils.COARSE_LOCATION)
+            )
+            if (viewModel.checkPermissionResult.value == PackageManager.PERMISSION_GRANTED) {
+                //show normal view
+                gpsUtils.checkGpsIsOpen(this, checkGpsResult)
+            }
         }
     }
 
@@ -178,5 +215,12 @@ class MainActivity : ComponentActivity() {
     private fun handleTwoDayWeatherEntityList(twoDayWeatherEntityList: List<TwoDayWeatherEntity>?) {
         if (twoDayWeatherEntityList == null || twoDayWeatherEntityList.isEmpty()) return
         viewModel.refreshCurrentWeatherEntity()
+    }
+
+    //intent
+
+    private fun startToAreaActivity(){
+//        startActivity(Intent(this, AreaChooseActivity::class.java))
+        chooseActivityLauncher.launch(Intent(this, AreaChooseActivity::class.java))
     }
 }

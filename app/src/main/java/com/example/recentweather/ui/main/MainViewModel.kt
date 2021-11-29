@@ -1,4 +1,4 @@
-package com.example.recentweather.ui
+package com.example.recentweather.ui.main
 
 import android.app.Application
 import android.location.Address
@@ -37,7 +37,11 @@ class MainViewModel @Inject constructor(application: Application, private val re
     val isRefreshing: StateFlow<Boolean>
         get() = _isRefreshing.asStateFlow()
 
+    var autoUpdateArea = true
+        private set
+
     var area = MutableLiveData("")
+        private set
 //    private var twoDayWeatherEntityList = mutableStateListOf<TwoDayWeatherEntity>()
     var twoDayWeatherEntityList = repository.twoDayWeatherEntityList
 
@@ -82,6 +86,11 @@ class MainViewModel @Inject constructor(application: Application, private val re
 //        return address[0].adminArea ?: address[0].subAdminArea ?: ""
         area.value = (address[0].adminArea ?: address[0].subAdminArea ?: "").replace('台', '臺')
 //        refreshCurrentWeatherEntity()
+    }
+
+    fun setAreaAndStopUpdateLocation(area: String) {
+        this.area.value = area
+        autoUpdateArea = false
     }
 
     fun filterWeatherEntityByArea(area: String): TwoDayWeatherEntity {

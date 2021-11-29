@@ -14,7 +14,6 @@ import javax.inject.Inject
 
 private const val TAG = "WeatherRepository"
 class WeatherRepository @Inject constructor(private val service: WeatherService, private val database: TwoDayWeatherDatabase) {
-//    val twoDayWeatherEntityList : List<TwoDayWeatherEntity> = database.twoDayWeatherDao.getList()
     val twoDayWeatherEntityList : LiveData<List<TwoDayWeatherEntity>> = database.twoDayWeatherDao.getLiveDataList()
 
     suspend fun refreshTwoDayWeather(): Boolean = withContext(Dispatchers.IO) {

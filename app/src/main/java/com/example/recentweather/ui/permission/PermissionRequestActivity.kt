@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.core.content.ContextCompat
 import com.example.recentweather.R
-import com.example.recentweather.ui.permission.ui.theme.RecentWeatherTheme
+import com.example.recentweather.ui.theme.RecentWeatherTheme
 import java.util.jar.Manifest
 
 private const val TAG = "PermissionRequestActivi"

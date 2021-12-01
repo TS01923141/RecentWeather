@@ -67,6 +67,21 @@ fun WeatherTopBar(locationName: String, onTitleClicked: () -> Unit) {
 @Composable
 fun WeatherScreen(viewModel: MainViewModel = viewModel(), twoDayWeatherEntity: TwoDayWeatherEntity, onTitleClicked: () -> Unit) {
     val isRefreshing by viewModel.isRefreshing.collectAsState()
+    WeatherScreen(
+        isRefreshing = isRefreshing,
+        lastModifiedTime = viewModel.getLastModifiedTime(),
+        twoDayWeatherEntity = twoDayWeatherEntity,
+        refreshTwoDayWeatherEntityList = viewModel::refreshTwoDayWeatherEntityList,
+        onTitleClicked = onTitleClicked
+    )
+}
+
+@Composable
+fun WeatherScreen(isRefreshing: Boolean,
+                  lastModifiedTime: Long,
+                  twoDayWeatherEntity: TwoDayWeatherEntity,
+                  refreshTwoDayWeatherEntityList: (Boolean) -> Unit,
+                  onTitleClicked: () -> Unit) {
     Scaffold(topBar = { WeatherTopBar(locationName = twoDayWeatherEntity.locationName, onTitleClicked) }) {
         Surface(
             color = MaterialTheme.colors.background,
@@ -74,7 +89,7 @@ fun WeatherScreen(viewModel: MainViewModel = viewModel(), twoDayWeatherEntity: T
         ) {
             SwipeRefresh(
                 state = rememberSwipeRefreshState(isRefreshing),
-                onRefresh = { viewModel.refreshTwoDayWeatherEntityList(forceRefresh = true) }) {
+                onRefresh = { refreshTwoDayWeatherEntityList(true) }) {
                 Column {
                     Row(
                         modifier = Modifier
@@ -94,7 +109,7 @@ fun WeatherScreen(viewModel: MainViewModel = viewModel(), twoDayWeatherEntity: T
                                 .fillMaxWidth()
                                 .fillMaxHeight()){
                             Text(
-                                text = SimpleDateFormat("最後更新時間 MM/dd HH:mm", Locale.TAIWAN).format(Date(viewModel.getLastModifiedTime())),
+                                text = SimpleDateFormat("最後更新時間 MM/dd HH:mm", Locale.TAIWAN).format(Date(lastModifiedTime)),
                                 fontSize = 12.sp
                             )
                         }
@@ -225,7 +240,7 @@ fun PreviewWeatherItem() {
 @Preview(name = "WeatherScreen(Dark)")
 @Composable
 fun PreviewWeatherScreen() {
-    val TwoDayWeatherEntity = TwoDayWeatherEntity(
+    val twoDayWeatherEntity = TwoDayWeatherEntity(
         "臺北市",
         25.035095f,
         121.558742f,
@@ -248,7 +263,13 @@ fun PreviewWeatherScreen() {
         )
     )
     RecentWeatherTheme {
-        WeatherScreen(viewModel(), TwoDayWeatherEntity, {})
+        WeatherScreen(
+            isRefreshing = false,
+            lastModifiedTime = 0,
+            twoDayWeatherEntity = twoDayWeatherEntity,
+            refreshTwoDayWeatherEntityList = {},
+            onTitleClicked = {}
+        )
     }
 }
 

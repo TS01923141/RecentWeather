@@ -17,6 +17,4 @@ private const val TAG = "AreaChooseViewModel"
 class AreaChooseViewModel @Inject constructor(private val repository: WeatherRepository): ViewModel() {
     val twoDayWeatherEntityList: LiveData<List<TwoDayWeatherEntity>> = repository.twoDayWeatherEntityList
     var stateTwoDayWeatherEntityList: MutableState<List<TwoDayWeatherEntity>> = mutableStateOf(mutableListOf())
-
-    var selectedArea= MutableLiveData<String>()
 }

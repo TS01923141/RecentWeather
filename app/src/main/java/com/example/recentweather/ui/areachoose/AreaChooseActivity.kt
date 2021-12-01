@@ -19,22 +19,20 @@ class AreaChooseActivity : AppCompatActivity() {
 
         with(viewModel) {
             twoDayWeatherEntityList.observe(this@AreaChooseActivity, ::handleTwoDayWeatherEntityList)
-            selectedArea.observe(this@AreaChooseActivity, ::handleSelectedArea)
         }
 
         setContent {
             RecentWeatherTheme {
                 AreaChooseScreen(
-                    viewModel,
                     twoDayWeatherList = viewModel.stateTwoDayWeatherEntityList.value,
-                    onBackClicked = { onBackPressed() })
+                    onBackClicked = { onBackPressed() },
+                    onItemClicked = ::onItemClicked)
             }
         }
     }
 
-    private fun handleSelectedArea(area: String?) {
-        if (area == null || area.isBlank() || area.isBlank()) return
-        val intent = Intent().putExtra("location_name", area)
+    private fun onItemClicked(locationName: String) {
+        val intent = Intent().putExtra("location_name", locationName)
         setResult(RESULT_OK, intent)
         finish()
     }

@@ -18,7 +18,7 @@ import com.example.recentweather.model.network.TwoDayWeatherEntity
 import com.example.recentweather.ui.theme.RecentWeatherTheme
 
 @Composable
-fun AreaChooseScreen(viewModel: AreaChooseViewModel, twoDayWeatherList: List<TwoDayWeatherEntity>?, onBackClicked: () -> Unit) {
+fun AreaChooseScreen(twoDayWeatherList: List<TwoDayWeatherEntity>?, onBackClicked: () -> Unit, onItemClicked: (String) -> Unit) {
     Scaffold(topBar = {
         TopAppBar(
             backgroundColor = MaterialTheme.colors.background,
@@ -38,7 +38,10 @@ fun AreaChooseScreen(viewModel: AreaChooseViewModel, twoDayWeatherList: List<Two
         if (twoDayWeatherList != null) {
             LazyColumn {
                 items(twoDayWeatherList) {
-                AreaItem(area = it.locationName, { viewModel.selectedArea.value = it.locationName })
+                    AreaItem(area = it.locationName) {
+//                        viewModel.selectedArea.value = it.locationName
+                        onItemClicked(it.locationName)
+                    }
                 }
             }
         }
@@ -79,7 +82,7 @@ fun PreviewAreaItem() {
 fun PreviewAreaChooseScreen() {
     val twoDayWeatherList = listOf<TwoDayWeatherEntity>(TwoDayWeatherEntity.test, TwoDayWeatherEntity.test)
     RecentWeatherTheme {
-        AreaChooseScreen(viewModel(), twoDayWeatherList, {})
+        AreaChooseScreen(twoDayWeatherList, {}, {})
     }
 }
 

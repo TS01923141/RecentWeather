@@ -29,6 +29,8 @@ class GpsUtils @Inject constructor(context: Context) {
 
     fun checkGpsIsOpen(activity: Activity, checkGpsResult: CheckGpsResult) {
         val builder = LocationSettingsRequest.Builder()
+            .addLocationRequest(LocationRequest.create()
+                .setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY))
         val client: SettingsClient = LocationServices.getSettingsClient(context)
         val task: Task<LocationSettingsResponse> = client.checkLocationSettings(builder.build()).apply {
             addOnSuccessListener {

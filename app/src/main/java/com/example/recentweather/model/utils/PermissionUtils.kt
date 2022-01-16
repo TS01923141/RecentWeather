@@ -91,8 +91,7 @@ class PermissionUtils(private val activity: ComponentActivity, private val permi
                 if (deniedCount >= 3) {
                     permissionResult.onDenied()
                     checkFinish()
-                }
-                else {
+                } else {
                     if (deniedCount == 1) showExplainPermissionListDialog(requestList)
                     else checkAndRequestPermissionList(requestList)
                 }
